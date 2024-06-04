@@ -1,44 +1,33 @@
-import express from "express";
-import mongoose from "mongoose";
-import cors from "cors";
-import { PORT, mongoDBURL } from "./config.js";
-import quotesRoute from "./routes/quotesRoute.js";
-
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
 const app = express();
-
-// Middleware for handling CORS POLICY
-// Option 1: Allow ALL Origins with Default of cors(*)
-// app.use(cors());
-// Option 2:
-app.use(cors({
-    origin: 'http://localhost:5173',
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
-    allowedHeaders: ['Content-type'],
-}));
-
-app.use(express.json()); // Middleware to parse JSON bodies
-
-app.get('/', (request, response) => {
-    console.log("there was a get request on /");
-    return response
-        .status(200)
-        .send("Welcome to my webpage!")
-})
-
-app.use('/quotes', quotesRoute);
+require("dotenv").config();
+const cookieParser = require("cookie-parser");
+const authRoute = require("./Routes/AuthRoute");
+const { MONGO_URL, PORT } = process.env;
 
 mongoose
-    .connect(mongoDBURL, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      })
-    .then(() => {
-        console.log("App connected to database");
-        app.listen(PORT, () => {
-            console.log(`App is listening on port: ${PORT}`);
-        });
-    })
-    .catch((error) => {
-        console.log(error)
-    })
+  .connect(MONGO_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("MongoDB is  connected successfully"))
+  .catch((err) => console.error(err));
+
+app.listen(PORT, () => {
+  console.log(`Server is listening on port ${PORT}`);
+});
+
+app.use(
+  cors({
+    origin: ["http://localhost:3000"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
+app.use(cookieParser());
+
+app.use(express.json());
+
+app.use("/", authRoute);
